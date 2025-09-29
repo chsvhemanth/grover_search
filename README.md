@@ -1,6 +1,3 @@
-Got it 👍 You want a **polished, professional README.md** that looks like something you’d put on GitHub. Here’s a full version, structured properly with badges, screenshots section, installation guide, usage, and contribution info:
-
-````markdown
 # Grover's Algorithm Interactive Simulator 🎯
 
 An interactive **Streamlit app** built with **Qiskit** to demonstrate **Grover’s Search Algorithm**.  
