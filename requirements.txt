@@ -1,0 +1,8 @@
+streamlit
+numpy
+matplotlib
+pandas
+qiskit
+qiskit-aer
+fpdf2
+imageio
