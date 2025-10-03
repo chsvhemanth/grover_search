@@ -6,3 +6,4 @@ qiskit
 qiskit-aer
 fpdf2
 imageio
+pylatexenc
