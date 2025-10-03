@@ -90,7 +90,10 @@ def qiskit_circuit_to_png_bytes(qc, scale=1.0):
         buf.seek(0)
         plt.close(fig)
         return buf.getvalue()
-    except Exception:
+    except Exception as e:
+        import traceback
+        print("Circuit PNG generation failed:", e)
+        print(traceback.format_exc())
         return b""
 
 # ---------------------------
@@ -308,8 +311,8 @@ for idx, (label, sv) in enumerate(zip(step_labels, sv_list)):
             try:
                 fig2 = temp_qc.draw(output="mpl", scale=1.0)
                 st.pyplot(fig2)
-            except Exception:
-                st.text("Circuit rendering not available in this environment.")
+            except Exception as e:
+                st.text(f"Circuit rendering not available in this environment. Error: {e}")
 
 # ---------------------------
 # Amplitude evolution animation (slider + play)
@@ -374,8 +377,8 @@ if show_circuits:
     try:
         fig_full = full_qc.draw(output="mpl", scale=1.0)
         st.pyplot(fig_full)
-    except Exception:
-        st.text("Circuit rendering not available in this environment.")
+    except Exception as e:
+        st.text(f"Circuit rendering not available in this environment. Error: {e}")
 
 # Map to human counts (already mapped)
 total_shots = sum(human_counts.values())
