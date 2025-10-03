@@ -520,65 +520,80 @@ if st.button("Generate Animated GIF"):
 # ---------------------------
 # PDF Tutorial Export (fpdf2 + Unicode font)
 # ---------------------------
-from fpdf import FPDF
 import io
 import os
+import markdown
+from fpdf import FPDF, HTMLMixin
 
-st.header("📄 Download PDF Tutorial (Unicode Support)")
+# Custom PDF class with HTML support
+class PDF(FPDF, HTMLMixin):
+    pass
+
+st.header("📄 Download PDF Tutorial (with Markdown Notes)")
 
 if st.button("Generate PDF Tutorial"):
 
-    pdf = FPDF()
+    pdf = PDF()
     pdf.add_page()
-    
-    # Add a TTF Unicode font
-    # You need to have this font file in your project folder or specify a system path
-    # Download from: https://www.fontsquirrel.com/fonts/dejavu-sans
+
+    # ✅ Add DejaVuSans fonts
     font_path = "DejaVuSans.ttf"
     if not os.path.exists(font_path):
         st.error("Please add DejaVuSans.ttf to your project folder for Unicode PDF support.")
         st.stop()
-    
+
     pdf.add_font("DejaVu", "", font_path, uni=True)
     pdf.add_font("DejaVu", "B", font_path, uni=True)
-    
-    # Title
-    pdf.set_font("DejaVu", 'B', 16)
+    pdf.add_font("DejaVu", "I", font_path, uni=True)
+    pdf.add_font("DejaVu", "BI", font_path, uni=True)
+
+    # 1️⃣ Title
+    pdf.set_font("DejaVu", "B", 16)
     pdf.multi_cell(0, 10, "Grover's Algorithm — Interactive Tutorial", align='C')
-    
     pdf.ln(5)
-    
-    # Overview
-    pdf.set_font("DejaVu", '', 12)
+
+    # 2️⃣ Overview
+    pdf.set_font("DejaVu", "", 12)
     pdf.multi_cell(0, 8,
                    f"Number of qubits: {num_qubits}\n"
                    f"Marked states: {', '.join(marked_states)}\n"
                    f"Optimal Grover iterations: {opt_iters}\n"
                    f"Shots used in measurement simulation: {shots}\n")
-    
     pdf.ln(5)
-    
-    # Explanation
+
+    # 3️⃣ Short Explanation
     pdf.multi_cell(0, 8,
                    "Explanation of Oracle and Diffuser:\n"
-                   "- Oracle: flips the phase (−1) of the marked states, enabling amplitude amplification.\n"
-                   "- Diffuser: inversion-about-average to amplify marked states after oracle application.\n"
-                   "- Together, repeated iterations increase probability of measuring marked states.")
-    
-    pdf.ln(5)
-    
-    # Optional: Embed full circuit image
+                   "- Oracle: flips the phase (−1) of the marked states.\n"
+                   "- Diffuser: inversion-about-average to amplify marked states.\n"
+                   "- Together, repeated iterations increase success probability.")
+    pdf.ln(10)
+
+    # 4️⃣ Embed full circuit image
     try:
-        if png_full:
+        if "png_full" in st.session_state and st.session_state["png_full"]:
             pdf.image(io.BytesIO(st.session_state["png_full"]), x=10, y=None, w=180)
     except Exception:
         pdf.multi_cell(0, 8, "Circuit image could not be embedded.")
 
-    # Generate PDF bytes
-    pdf_bytes = bytes(pdf.output(dest='S'))  # convert bytearray -> bytes
+    # 5️⃣ Markdown notes (optional)
+    md_file = "grover_search.md"
+    if os.path.exists(md_file):
+        with open(md_file, "r", encoding="utf-8") as f:
+            md_text = f.read()
+        html_text = markdown.markdown(md_text)
+        pdf.set_font("DejaVu", "", 12)
+        pdf.write_html(html_text)
+    else:
+        pdf.multi_cell(0, 8, "⚠️ No extra markdown notes found. Place 'grover_search.md' in the project folder.")
+
+    pdf.ln(10)
+
+    # 6️⃣ Output PDF to Streamlit
+    pdf_bytes = bytes(pdf.output(dest='S'))
     st.download_button(
-    "⬇️ Download PDF Tutorial",
-    pdf_bytes,
-    file_name="grover_tutorial.pdf",
-    mime="application/pdf"
-)
+        "⬇️ Download PDF Tutorial (with Notes)",
+        pdf_bytes,
+        file_name="grover_tutorial.pdf",
+        mime="application/pdf"
+    )
