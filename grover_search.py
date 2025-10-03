@@ -10,7 +10,7 @@ import time
 from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator
 from qiskit.quantum_info import Statevector
-from qiskit.circuit.library import Diagonal
+from qiskit.circuit.library import DiagonalGate
 
 st.set_page_config(page_title="Grover's Algorithm Demo (Extended)", layout="wide")
 
@@ -34,7 +34,8 @@ def make_oracle_gate(marked_states, n_qubits):
     for s in marked_states:
         idx = human_to_index(s)
         diag[idx] = -1.0
-    diag_gate = Diagonal(diag).to_gate(label="Oracle")
+    diag_gate = DiagonalGate(diag)
+    diag_gate.label = "Oracle"
     return diag_gate
 
 @st.cache_data
@@ -42,7 +43,8 @@ def make_diffusion_gate(n_qubits):
     """Build diffusion (inversion about average) as a single gate (H^n · Phase0 · H^n)."""
     size = 2 ** n_qubits
     diag_phase0 = [-1.0] + [1.0] * (size - 1)
-    phase0_gate = Diagonal(diag_phase0).to_gate(label="Phase0")
+    phase0_gate = DiagonalGate(diag_phase0)
+    phase0_gate.label = "Phase0"
     qc = QuantumCircuit(n_qubits, name="Diffusion")
     qc.h(range(n_qubits))
     qc.append(phase0_gate, range(n_qubits))
@@ -435,11 +437,23 @@ with st.expander("What is the Oracle?"):
     )
     st.write("Oracle matrix (diagonal entries):")
     try:
-        diag_values = make_oracle_gate(marked_states, num_qubits).to_matrix().diagonal()
-        diag_df = pd.DataFrame({"index": range(len(diag_values)), "diag": diag_values})
+        # Reconstruct the diagonal directly as in make_oracle_gate
+        size = 2 ** num_qubits
+        diag = [1.0] * size
+        # For display, show both Qiskit index and human bitstring (MSB-left)
+        human_bitstrings = [format(i, f'0{num_qubits}b') for i in range(size)]
+        # Flip at the index matching the human bitstring (no reverse)
+        for s in marked_states:
+            idx = int(s, 2)
+            diag[idx] = -1.0
+        diag_df = pd.DataFrame({
+            "index": range(size),
+            "human_bitstring": human_bitstrings,
+            "diag": diag
+        })
         st.dataframe(diag_df.head(16), width='stretch')
-    except Exception:
-        st.text("Cannot display oracle diagonal matrix here.")
+    except Exception as e:
+        st.text(f"Cannot display oracle diagonal matrix here. Error: {type(e).__name__}: {e}")
 
 with st.expander("What is the Diffuser (Inversion-about-the-average)?"):
     st.markdown(
