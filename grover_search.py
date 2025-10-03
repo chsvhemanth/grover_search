@@ -1,4 +1,8 @@
-# grover_streamlit.py
+
+# Set matplotlib backend for headless environments (Streamlit Cloud, etc.)
+import matplotlib
+matplotlib.use("Agg")
+
 import streamlit as st
 import numpy as np
 import math
